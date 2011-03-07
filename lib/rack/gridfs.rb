@@ -19,12 +19,14 @@ module Rack
       @prefix     = options[:prefix].gsub(/^\//, '')
       @lookup     = options[:lookup]
       @db         = nil
-
+      @debug      = options[:debug]
       @hostname, @port, @database, @username, @password = 
         options.values_at(:hostname, :port, :database, :username, :password)
 
       connect!
     end
+
+    REQUEST_LOG_DIR = "/Users/jeroenbulters/Documents/gridfs.log"
 
     def call(env)
       request = Rack::Request.new(env)
@@ -38,7 +40,7 @@ module Rack
     private
       def connect!
         Timeout::timeout(5) do
-          @db = Mongo::Connection.new(@hostname, @port).db(@database)
+          @db = Mongo::Connection.new(@hostname, @port, :slave_ok => true).db(@database)
           @db.authenticate(@username, @password) if @username
         end
       rescue Exception => e
@@ -46,6 +48,9 @@ module Rack
       end
 
       def gridfs_request(identifier)
+        ::File.open(REQUEST_LOG_DIR, 'wb') do |fh|
+          fh.puts("Request for #{identifier}")
+        end
         file = find_file(identifier)
         [200, {'Content-Type' => file.content_type}, file]
       rescue Mongo::GridFileNotFound, BSON::InvalidObjectId
