@@ -26,7 +26,7 @@ module Rack
       connect!
     end
 
-    REQUEST_LOG_DIR = "/Users/jeroenbulters/Documents/gridfs.log"
+    REQUEST_LOG_DIR = "./log/gridfs.log"
 
     def call(env)
       request = Rack::Request.new(env)
